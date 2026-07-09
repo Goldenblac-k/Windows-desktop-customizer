@@ -40,6 +40,15 @@ db.exec(`
     CREATE TABLE IF NOT EXISTS settingsThemes (
         theme   TEXT    PRIMARY KEY
     );
+
+    CREATE TABLE IF NOT EXISTS background (
+        directory   TEXT    PRIMARY KEY,
+        extension   TEXT    NOT NULL
+    );
+
+    CREATE TABLE IF NOT EXISTS desktop (
+        path    TEXT    PRIMARY KEY
+    );
 `)
 
 export default db

@@ -81,12 +81,12 @@ class Notes extends HTMLElement {
                 }
 
                 .modeleNoteTitle {
-                    user-select: none;
                     padding: 15px;
                 }
 
                 .modeleNoteDesc {
                     padding: 15px;
+                    user-select: all;
                 }
 
                 /* -- MODULES -- */

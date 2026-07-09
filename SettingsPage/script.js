@@ -1,11 +1,77 @@
 async function init() {
     const body = document.querySelector('body')
+    const img = document.querySelector('img')
 
     const modulesBtn = document.querySelector('#modules')
     const placesBtn = document.querySelector('#placements')
     const themesBtn = document.querySelector('#thèmes')
+    const bgBtn = document.querySelector('#bg')
 
     const container = document.querySelector('.container')
+
+    var background = await fetch('http://localhost:3000/settings/background').then(r => r.json())
+    if (background.length == 0) await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
+
+    async function rafraichirBG() {
+        try {
+            const bg = await fetch('http://localhost:3000/background/image')
+
+            if (bg.ok) {
+                const blob = await bg.blob()
+                img.src = URL.createObjectURL(blob)
+            } else if (bg.status === 404) {
+                console.log('Chemin obsolèthe')
+                await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
+                rafraichirBG()
+            }
+        } catch (e) {
+            console.error("Erreur lors de la récupération du fond d'écran :", e)
+        }
+    }
+
+    await rafraichirBG()
+
+    if (bgBtn) {
+        const fileInput = document.createElement('input')
+        fileInput.type = 'file'
+        fileInput.accept = 'image/png, image/jpeg, image/jpg'
+        fileInput.style.display = 'none'
+        document.body.appendChild(fileInput)
+
+        bgBtn.addEventListener('click', () => fileInput.click())
+
+        fileInput.addEventListener('change', () => {
+            const file = fileInput.files[0]
+            if (!file) return
+
+            const fileExtension = file.name.substring(file.name.lastIndexOf('.'))
+            const reader = new FileReader()
+
+            reader.onload = async (e) => {
+                const buffer = e.target.result
+                try {
+                    const response = await fetch('http://localhost:3000/settings/background/update', {
+                        method: 'POST',
+                        headers: { 
+                            'Content-Type': 'application/octet-stream',
+                            'X-File-Extension': fileExtension
+                        },
+                        body: buffer
+                    })
+                    
+                    const result = await response.json()
+                    if (result.ok) {
+                        window.location.reload()
+                    } else {
+                        alert("Erreur serveur : " + result.error)
+                    }
+                } catch (error) {
+                    console.error("Erreur lors de l'envoi de l'image :", error)
+                }
+            }
+            reader.readAsArrayBuffer(file)
+        })
+    }
 
     container.style.width = body.offsetWidth + "px"
     container.style.height = body.offsetHeight - 50 + "px"

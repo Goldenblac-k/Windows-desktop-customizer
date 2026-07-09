@@ -10,7 +10,17 @@ const app = express()
 app.use(cors())
 app.use(express.json())
 app.use(express.text())
-const desktop = 'Chemin/vers/le/bureau'
+
+var desktop
+try {
+    if (db.prepare('select count(*) as nb from desktop').get()['nb'] == 0) {
+        desktop = execSync(`powershell -Command "[Environment]::GetFolderPath('Desktop')"`).toString().trim().replace(/\\/g, '/');
+        console.log(desktop)
+        db.prepare('insert into desktop values(?)').run(desktop)
+    } else desktop = db.prepare('select path from desktop').get()['path']
+} catch (e) {
+    res.status(500).json({ error: "Impossible de trouver le bureau" })
+}
 
 
 app.get('/notes', (req, res) => {
@@ -211,5 +221,84 @@ app.patch('/settingsThemes/update', (req, res) => {
     res.json({ok: true})
 })
 
+app.get('/settings/background', (req, res) => {
+    res.json(db.prepare('select * from background').all())
+})
+
+app.post('/settings/background/insert', (req, res) => {
+    try {
+        const username = process.env.USERNAME
+        const uniqueFileName = "mon_fond_unique_lively_xyz"; 
+
+        const command = `powershell -Command "(Get-ChildItem -Path 'C:\\Users\\${username}\\AppData' -Filter '${uniqueFileName}.*' -Recurse -ErrorAction SilentlyContinue).FullName | Where-Object { $_ -like '*Lively Wallpaper*'}"`;
+        const stdout = execSync(command).toString().trim();
+
+        var path = stdout.split(/\r?\n/).filter(line => line.trim() !== '')
+        path = path.toString().split('\\')
+        const extension = path[path.length - 1].split('.')
+
+        var directory = ''
+        for (let i = 0; i < path.length - 1; i++){
+            directory += path[i] + '/'
+        }
+
+        if (db.prepare('select count(*) as nb from background').get()['nb'] == 0){
+            db.prepare('insert into background values(?, ?)').run(directory, extension[1])
+        } else if (db.prepare('select directory from background').get()['directory'] !== directory) {
+            db.prepare('update background set directory = ?').run(directory)
+        }
+        
+        res.json({ok: true})
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
+
+app.get('/background/image', (req, res) => {
+    const bg = db.prepare('select * from background').get()
+    if (!bg) return res.status(404).json({ error: 'Pas de fond défini' })
+    
+    const fullPath = path.resolve(bg.directory.replace(/\//g, '\\') + 'mon_fond_unique_lively_xyz.' + bg.extension)
+    res.sendFile(fullPath)
+})
+
+app.post('/settings/background/update', express.raw({ type: 'application/octet-stream', limit: '50mb' }), (req, res) => {
+    try {
+        const bgConfig = db.prepare('select * from background').get();
+        if (!bgConfig) {
+            return res.status(404).json({ error: "Aucun dossier initialisé dans la BDD." });
+        }
+
+        const directory = bgConfig.directory;
+        const oldExtension = bgConfig.extension;
+        
+        const newExtensionWithDot = req.headers['x-file-extension'] || '.png';
+        const newExtension = newExtensionWithDot.replace('.', '').toLowerCase();
+
+        const uniqueFileName = "mon_fond_unique_lively_xyz";
+        const oldFilePath = path.join(directory, `${uniqueFileName}.${oldExtension}`);
+        const newFilePath = path.join(directory, `${uniqueFileName}.${newExtension}`);
+
+        if (fs.existsSync(oldFilePath)) {
+            fs.unlinkSync(oldFilePath);
+        }
+
+        fs.writeFileSync(newFilePath, req.body);
+
+        const livelyInfoPath = path.join(directory, 'LivelyInfo.json');
+        if (fs.existsSync(livelyInfoPath)) {
+            let infoData = JSON.parse(fs.readFileSync(livelyInfoPath, 'utf-8'));
+            infoData.FileName = `${uniqueFileName}.${newExtension}`;
+            infoData.Type = 2;
+            fs.writeFileSync(livelyInfoPath, JSON.stringify(infoData, null, 2), 'utf-8');
+        }
+
+        db.prepare('update background set extension = ?').run(newExtension);
+
+        res.json({ ok: true });
+    } catch (err) {
+        res.status(500).json({ error: err.message });
+    }
+});
 
 app.listen(3000, () => console.log('Serveur widgets lancé'))

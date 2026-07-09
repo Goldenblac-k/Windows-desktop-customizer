@@ -72,6 +72,7 @@ class AppMenu extends HTMLElement {
                     background-color: rgba(0, 0, 0, 0);
                     border: 1px solid rgb(128, 128, 128);
                     box-sizing: border-box;
+                    user-select: all;
                 }
 
                 .loader {
