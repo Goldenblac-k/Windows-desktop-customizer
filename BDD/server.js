@@ -112,7 +112,7 @@ app.get('/bureau', (req, res) => {
     
     const safeQuery = query.replace(/['"*;]/g, '')
     const searchPath = [
-        'C:/Users/joang',
+        `C:/Users/${process.env.USERNAME}`,
         'D:/',
         'E:/',
         'F:/'
