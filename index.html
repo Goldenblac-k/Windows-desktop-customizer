@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Widget</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <script>
+        (function() {
+            let lastKeyTime = 0;
+
+            window.addEventListener('keydown', function(e) {
+                const now = performance.now();
+                if (now - lastKeyTime < 25) {
+                    e.preventDefault();
+                    e.stopImmediatePropagation();
+                    return;
+                }
+                lastKeyTime = now;
+            }, true);
+
+            window.addEventListener('input', function(e) {
+                const now = performance.now();
+                const element = e.composedPath()[0];
+                
+                if (element && (element.tagName === 'INPUT' || element.tagName === 'TEXTAREA')) {
+                    if (now - (element._lastInputTime || 0) < 25) {
+                        if (element._oldValue !== undefined) {
+                            const cursorPosition = element.selectionStart;
+                            element.value = element._oldValue;
+                            element.setSelectionRange(cursorPosition - 1, cursorPosition - 1);
+                        }
+                    }
+                    element._oldValue = element.value;
+
+                    element._lastInputTime = now;
+                }
+            }, true);
+        })();
+    </script>
+
+    <script type="module" src="./AppMenu/appMenu-module.js"></script>
+    <script type="module" src="./Calendar/calendar-module.js"></script>
+    <script type="module" src="./Notes/notes-module.js"></script>
+
+    <img src="bg.jpg" alt="">
+
+    <script src="script.js"></script>
+</body>
+</html>

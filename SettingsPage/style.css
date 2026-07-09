@@ -1,0 +1,138 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+    background-color: black;
+}
+
+#bg-container {
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 0;
+    pointer-events: none;
+}
+
+#background-container img, #background-container video {
+    object-fit: cover;
+}
+
+.settingBar {
+    display: flex;
+    position: absolute;
+    width: 100%;
+    height: 50px;
+    bottom: 0;
+    background-color: rgba(255, 255, 255, 0.22);
+    justify-content: center;
+    z-index: 5;
+    
+}
+
+.settingBar > div {
+    display: flex;
+    color: white;
+    height: 100%;
+    width: 50%;
+    gap: 1px;
+}
+
+.settingBar h1 {
+    height: 100%;
+    width: 20%;
+    text-align: center;
+    align-content: center;
+    border: 1px solid black;
+    border-top: none;
+    border-bottom: none;
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+    min-width: max-content;
+    padding: 0 10px;
+}
+
+.liste {
+    position: absolute;
+    background-color: rgba(255, 255, 255, 0.22);
+    color: white;
+}
+
+.module {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 5px;
+}
+
+.module > input {
+    width: 20px;
+    height: 20px;
+}
+
+.container {
+    z-index: 1;
+}
+
+appmenu-module, calendar-module {
+    display: block;
+    position: absolute;
+    overflow: hidden;
+    pointer-events: none;
+}
+
+.container.edition appmenu-module,
+.container.edition calendar-module {
+    pointer-events: auto;
+    outline: 2px dashed #cc2900;
+    outline-offset: -2px;
+}
+
+.container.edition appmenu-module::after,
+.container.edition calendar-module::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 4;
+}
+
+.container::before, .container::after {
+    content: '';
+    position: absolute;
+    background-color: rgba(0, 122, 204, 0.5);
+    z-index: 4;
+    display: none;
+    pointer-events: none;
+}
+
+.container::before {
+    left: 50%;
+    top: 0;
+    width: 2px;
+    height: 100%;
+    transform: translateX(-50%);
+}
+
+.container::after {
+    top: 50%;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    transform: translateY(-50%);
+}
+
+.container.snap-x::before {
+    display: block;
+}
+
+.container.snap-y::after {
+    display: block;
+}

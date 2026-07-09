@@ -1,0 +1,20 @@
+* {
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    width: 100vw;
+    height: 100vh;
+    overflow: hidden;
+}
+
+img {
+    position: absolute;
+    pointer-events: none;
+    z-index: 0;
+}
+
+notes-module, calendar-module, appmenu-module {
+    position: absolute;
+}
