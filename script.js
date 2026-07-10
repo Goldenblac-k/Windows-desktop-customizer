@@ -101,7 +101,9 @@ async function init() {
     rafraichirBG()
 
     window.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.key == 'R') {
+        if (e.ctrlKey && (e.key === 'R' || e.key === 'r')) {
+            e.preventDefault()
+            e.stopImmediatePropagation()
             window.location.reload()
         }
     })
