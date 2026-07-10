@@ -8,7 +8,7 @@ sLink.Description = "Start the database server and the config web page server"
 sLink.IconLocation = ".\BDD\start.vbs,0"
 sLink.Save
 
-Desktop = WshShell.ExpandEnvironmentStrings("%USERPROFILE%") & "\Desktop\open-settings.vbs"
+Desktop = WshShell.ExpandEnvironmentStrings("%USERPROFILE%") & "\Desktop\open-settings.lnk"
 Set dLink = WshShell.CreateShortcut(Desktop)
 dLink.TargetPath = ".\SettingsPage\open-settings.vbs"
 dLink.WorkingDirectory = ".\SettingsPage"
