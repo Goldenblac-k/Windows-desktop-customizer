@@ -48,30 +48,6 @@ async function init() {
     const settingsModules = await fetch('http://localhost:3000/settingsModules').then(r => r.json())
     if (settingsModules[2].actif !== 'true') body.appendChild(style)
 
-    var background = await fetch('http://localhost:3000/settings/background').then(r => r.json())
-    if (background.length == 0) await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
-
-    const img = document.querySelector('img')
-    
-    async function rafraichirBG() {
-        try {
-            const bg = await fetch('http://localhost:3000/background/image')
-
-            if (bg.ok) {
-                const blob = await bg.blob()
-                img.src = URL.createObjectURL(blob)
-            } else if (bg.status === 404) {
-                console.log('Chemin obsolèthe')
-                await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
-                rafraichirBG()
-            }
-        } catch (e) {
-            console.error("Erreur lors de la récupération du fond d'écran :", e)
-        }
-    }
-
-    rafraichirBG()
-
     const mods = [
         ['AppMenu', '../AppMenu/appMenu-module.js', 'appmenu-module'],
         ['Calendar', '../Calendar/calendar-module.js', 'calendar-module'],
@@ -93,10 +69,40 @@ async function init() {
             body.appendChild(balise)
         }
     }
+    
+    const background = await fetch('http://localhost:3000/settings/background').then(r => r.json())
+    if (background.length == 0) await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
+
+    const img = document.querySelector('img')
+    
+    async function rafraichirBG() {
+        try {
+            const bg = await fetch('http://localhost:3000/background/image')
+
+            if (bg.ok) {
+                const blob = await bg.blob()
+                img.src = URL.createObjectURL(blob)
+            } else if (bg.status === 404) {
+                await fetch('http://localhost:3000/settings/background/insert', { method: 'POST' })
+
+                await fetch('http://localhost:3000/settings/background/insert', { method: 'POST' })
+                    
+                const retryBg = await fetch('http://localhost:3000/background/image')
+                if (retryBg.ok) {
+                    const blob = await retryBg.blob()
+                    img.src = URL.createObjectURL(blob)
+                }
+            }
+        } catch (e) {
+            console.error("Erreur lors de la récupération du fond d'écran :", e)
+        }
+    }
+
+    rafraichirBG()
 
     window.addEventListener('keydown', (e) => {
         if (e.ctrlKey && e.key == 'R') {
-            window.reload()
+            window.location.reload()
         }
     })
 }

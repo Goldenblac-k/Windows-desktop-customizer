@@ -112,7 +112,7 @@ app.get('/bureau', (req, res) => {
     
     const safeQuery = query.replace(/['"*;]/g, '')
     const searchPath = [
-        `C:/Users/${process.env.USERNAME}`,
+        'C:/Users/joang',
         'D:/',
         'E:/',
         'F:/'
@@ -230,7 +230,7 @@ app.post('/settings/background/insert', (req, res) => {
         const username = process.env.USERNAME
         const uniqueFileName = "mon_fond_unique_lively_xyz"; 
 
-        const command = `powershell -Command "(Get-ChildItem -Path 'C:\\Users\\${username}\\AppData' -Filter '${uniqueFileName}.*' -Recurse -ErrorAction SilentlyContinue).FullName | Where-Object { $_ -like '*Lively Wallpaper*'}"`;
+        const command = `powershell -Command "(Get-ChildItem -Path 'C:\\Users\\${username}\\AppData\\Local' -Filter '${uniqueFileName}.*' -Recurse -ErrorAction SilentlyContinue).FullName | Where-Object { $_ -like '*Lively Wallpaper*'}"`;
         const stdout = execSync(command).toString().trim();
 
         var path = stdout.split(/\r?\n/).filter(line => line.trim() !== '')
@@ -245,7 +245,7 @@ app.post('/settings/background/insert', (req, res) => {
         if (db.prepare('select count(*) as nb from background').get()['nb'] == 0){
             db.prepare('insert into background values(?, ?)').run(directory, extension[1])
         } else if (db.prepare('select directory from background').get()['directory'] !== directory) {
-            db.prepare('update background set directory = ?').run(directory)
+            db.prepare('update background set directory = ?, extension = ?').run(directory, extension[1])
         }
         
         res.json({ok: true})
@@ -255,11 +255,39 @@ app.post('/settings/background/insert', (req, res) => {
 });
 
 app.get('/background/image', (req, res) => {
-    const bg = db.prepare('select * from background').get()
-    if (!bg) return res.status(404).json({ error: 'Pas de fond défini' })
-    
-    const fullPath = path.resolve(bg.directory.replace(/\//g, '\\') + 'mon_fond_unique_lively_xyz.' + bg.extension)
-    res.sendFile(fullPath)
+    try {
+        const bg = db.prepare('select * from background').get();
+        if (!bg) {
+            return res.status(404).json({ error: 'Pas de fond défini en BDD', code: 'FOLDER_CHANGED' });
+        }
+
+        // Reconstruction du chemin absolu propre à Windows
+        const fullPath = path.resolve(bg.directory.replace(/\//g, '\\') + 'mon_fond_unique_lively_xyz.' + bg.extension);
+
+        // Si le fichier physique n'est plus là, c'est que Lively a renommé ou déplacé le dossier !
+        if (!fs.existsSync(fullPath)) {
+            return res.status(404).json({ error: 'Fichier ou dossier introuvable sur le disque', code: 'FOLDER_CHANGED' });
+        }
+
+        // PROTECTION CLÉ : On lit en Buffer mémoire pour ne pas lever d'alertes "File Watcher" chez Lively
+        fs.readFile(fullPath, (err, data) => {
+            if (err) {
+                return res.status(500).json({ error: "Erreur de lecture de l'image" });
+            }
+            
+            const contentType = (bg.extension === 'jpg' || bg.extension === 'jpeg') ? 'image/jpeg' : 'image/png';
+            
+            res.writeHead(200, {
+                'Content-Type': contentType,
+                'Content-Length': data.length
+            });
+            res.end(data);
+        });
+
+    } catch (e) {
+        console.error(e);
+        res.status(500).json({ error: "Erreur serveur" });
+    }
 })
 
 app.post('/settings/background/update', express.raw({ type: 'application/octet-stream', limit: '50mb' }), (req, res) => {
@@ -284,14 +312,6 @@ app.post('/settings/background/update', express.raw({ type: 'application/octet-s
         }
 
         fs.writeFileSync(newFilePath, req.body);
-
-        const livelyInfoPath = path.join(directory, 'LivelyInfo.json');
-        if (fs.existsSync(livelyInfoPath)) {
-            let infoData = JSON.parse(fs.readFileSync(livelyInfoPath, 'utf-8'));
-            infoData.FileName = `${uniqueFileName}.${newExtension}`;
-            infoData.Type = 2;
-            fs.writeFileSync(livelyInfoPath, JSON.stringify(infoData, null, 2), 'utf-8');
-        }
 
         db.prepare('update background set extension = ?').run(newExtension);
 
