@@ -2,7 +2,19 @@ class Calendar extends HTMLElement {
     async connectedCallback() {
         const shadow = this.attachShadow({mode: 'open'})
 
-        const settingsThemes = await fetch('http://localhost:3000/settingsThemes').then(r => r.json())
+        async function fetchTheme() {
+            for (let i = 0; i < 10; i++) {
+                try {
+                    const res = await fetch('http://localhost:3000/settingsThemes')
+                    if (res.ok) return await res.json()
+                } catch (e) {
+                    await new Promise(r => setTimeout(r, 1000))
+                }
+            }
+            return []
+        }
+
+        const settingsThemes = await fetchTheme()
 
         shadow.innerHTML = `
             <style>
@@ -398,19 +410,7 @@ class Calendar extends HTMLElement {
         const monthNames = ['Janvier', 'Février', 'Mars', 'Avril', 'Mai', 'Juin',
             'Juillet', 'Août', 'Septembre', 'Octobre', 'Novembre', 'Décembre'];
 
-        async function fetchCalendar() {
-            for (let i = 0; i < 10; i++) {
-                try {
-                    const res = await fetch('http://localhost:3000/calendar')
-                    if (res.ok) return await res.json()
-                } catch (e) {
-                    await new Promise(r => setTimeout(r, 1000))
-                }
-            }
-            return []
-        }
-
-        var events = await fetchCalendar()
+        var events = await fetch('http://localhost:3000/calendar').then(r => r.json())
         const view = await fetch('http://localhost:3000/view').then(r => r.json())
 
         var currentDate = new Date()

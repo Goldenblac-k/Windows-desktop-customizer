@@ -1,7 +1,19 @@
 async function init() {
     const body = document.querySelector('body')
 
-    const settingsThemes = await fetch('http://localhost:3000/settingsThemes').then(r => r.json())
+    async function fetchTheme() {
+        for (let i = 0; i < 10; i++) {
+            try {
+                const res = await fetch('http://localhost:3000/settingsThemes')
+                if (res.ok) return await res.json()
+            } catch (e) {
+                await new Promise(r => setTimeout(r, 1000))
+            }
+        }
+        return []
+    }
+
+    const settingsThemes = await fetchTheme()
 
     const style = document.createElement('style')
     style.innerHTML += `
@@ -104,7 +116,7 @@ async function init() {
         if (e.ctrlKey && (e.key === 'R' || e.key === 'r')) {
             e.preventDefault()
             e.stopImmediatePropagation()
-            window.location.reload()
+            window.location.reload(true)
         }
     })
 }

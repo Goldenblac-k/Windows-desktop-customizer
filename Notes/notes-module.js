@@ -2,7 +2,19 @@ class Notes extends HTMLElement {
     async connectedCallback() {
         const shadow = this.attachShadow({mode: 'open'})
 
-        const settingsThemes = await fetch('http://localhost:3000/settingsThemes').then(r => r.json())
+        async function fetchTheme() {
+            for (let i = 0; i < 10; i++) {
+                try {
+                    const res = await fetch('http://localhost:3000/settingsThemes')
+                    if (res.ok) return await res.json()
+                } catch (e) {
+                    await new Promise(r => setTimeout(r, 1000))
+                }
+            }
+            return []
+        }
+
+        const settingsThemes = await fetchTheme()
 
         if (settingsThemes.length != 0) shadow.innerHTML = `
             <style>
@@ -82,11 +94,12 @@ class Notes extends HTMLElement {
 
                 .modeleNoteTitle {
                     padding: 15px;
+                    user-select: none;
                 }
 
                 .modeleNoteDesc {
                     padding: 15px;
-                    user-select: all;
+                    user-select: auto;
                 }
 
                 /* -- MODULES -- */
@@ -209,19 +222,7 @@ class Notes extends HTMLElement {
         const body = shadow.children[1]
         const calendar = shadow.children[2]
 
-        async function fetchNotes() {
-            for (let i = 0; i < 10; i++) {
-                try {
-                    const res = await fetch('http://localhost:3000/notes')
-                    if (res.ok) return await res.json()
-                } catch (e) {
-                    await new Promise(r => setTimeout(r, 1000))
-                }
-            }
-            return []
-        }
-
-        const notes = await fetchNotes()
+        const notes = await fetch('http://localhost:3000/notes')
 
         const newNote = document.createElement('div')
         newNote.className = 'openNote'

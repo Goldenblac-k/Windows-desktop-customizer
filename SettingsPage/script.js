@@ -9,7 +9,19 @@ async function init() {
 
     const container = document.querySelector('.container')
 
-    var background = await fetch('http://localhost:3000/settings/background').then(r => r.json())
+    async function fetchBackground() {
+        for (let i = 0; i < 10; i++) {
+            try {
+                const res = await fetch('http://localhost:3000/settings/background')
+                if (res.ok) return await res.json()
+            } catch (e) {
+                await new Promise(r => setTimeout(r, 1000))
+            }
+        }
+        return []
+    }
+
+    var background = await fetchBackground()
     if (background.length == 0) await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
 
     async function rafraichirBG() {

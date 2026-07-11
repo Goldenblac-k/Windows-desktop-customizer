@@ -2,7 +2,19 @@ class AppMenu extends HTMLElement {
     async connectedCallback() {
         const shadow = this.attachShadow({mode: 'open'})
 
-        const settingsThemes = await fetch('http://localhost:3000/settingsThemes').then(r => r.json())
+        async function fetchTheme() {
+            for (let i = 0; i < 10; i++) {
+                try {
+                    const res = await fetch('http://localhost:3000/settingsThemes')
+                    return await res.json()
+                } catch (e) {
+                    await new Promise(r => setTimeout(r, 1000))
+                }
+            }
+            return []
+        }
+
+        const settingsThemes = await fetchTheme()
     
         shadow.innerHTML = `
             <style>
@@ -115,15 +127,8 @@ class AppMenu extends HTMLElement {
 
         async function requests(com, chemin){
             if (com == 'get'){
-                for (let i = 0; i < 10; i++) {
-                    try {
-                        const res = await fetch('http://localhost:3000/bureau')
-                        return await res.json()
-                    } catch (e) {
-                        await new Promise(r => setTimeout(r, 1000))
-                    }
-                }
-                return []
+                const res = await fetch('http://localhost:3000/bureau')
+                return await res.json()
             }
             else if (com == 'exec'){
                 try {
