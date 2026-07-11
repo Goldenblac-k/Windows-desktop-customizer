@@ -19,5 +19,6 @@ dLink.Description = "Open the default browser with the config web page"
 dLink.Save
 
 WshShell.Run "cmd /c cd /d """ & scriptDir & "\BDD"" && npm install", 1, True
-WshShell.Run """" & scriptDir & "\BDD\start.vbs""", 0, False
+WshShell.CurrentDirectory = scriptDir & "\BDD"
+WshShell.Run "wscript """ & scriptDir & "\BDD\start.vbs""", 0, False
 fso.DeleteFile WScript.ScriptFullName
