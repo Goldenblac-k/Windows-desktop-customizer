@@ -247,6 +247,7 @@ class Calendar extends HTMLElement {
                     min-height: 0;
                     gap: 1px;
                     overflow-y: auto;
+                    overflow-x: hidden;
                     padding: 0px 2px 0px 2px;
                 }
 
