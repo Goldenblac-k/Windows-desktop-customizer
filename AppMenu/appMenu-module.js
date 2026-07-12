@@ -3,15 +3,19 @@ class AppMenu extends HTMLElement {
         const shadow = this.attachShadow({mode: 'open'})
 
         async function fetchTheme() {
+            /*
+            Renvoie le thème global du shader, tout en laissant à l'ordinateur le temps de s'allumer
+            */
+
             for (let i = 0; i < 10; i++) {
                 try {
-                    const res = await fetch('http://localhost:3000/settingsThemes')
-                    return await res.json()
+                    const res = await fetch('http://localhost:3000/settingsThemes') // Demande au serveur de renvoyer les informations liées au thème
+                    return await res.json() // Parse la réponse en un tableau exploitable
                 } catch (e) {
-                    await new Promise(r => setTimeout(r, 1000))
+                    await new Promise(r => setTimeout(r, 1000)) // Applique un délais avant de relancer une demande
                 }
             }
-            return []
+            return []   // Si le serveur n'a pas réussi à s'allumer à temps
         }
 
         const settingsThemes = await fetchTheme()
@@ -35,6 +39,8 @@ class AppMenu extends HTMLElement {
                     z-index: 1;
                     box-sizing: border-box;
                 }
+
+                /* -- Partie conteneure d'applications -- */ 
 
                 .container {
                     display: grid;
@@ -68,6 +74,8 @@ class AppMenu extends HTMLElement {
                     margin-left: 20px;
                 }
 
+                /* -- Partie barre de recherche -- */
+
                 .searchContainer {
                     display: flex;
                     height: 50px;
@@ -90,10 +98,10 @@ class AppMenu extends HTMLElement {
                 .loader {
                     display: none;
                     position: absolute;
-                    right: 20px;
-                    top: 15px;
-                    width: 18px;
-                    height: 18px;
+                    width: 20px;
+                    height: 20px;
+                    top: 7px;
+                    right: 7px;
                     border: 3px solid ${settingsThemes[0].theme === 'Clair' ? 'rgba(0, 0, 0, 0.2)' : 'rgba(255, 255, 255, 0.2)'};
                     border-radius: 50%;
                     border-top-color: ${settingsThemes[0].theme === 'Clair' ? 'black' : 'white'};
@@ -126,11 +134,15 @@ class AppMenu extends HTMLElement {
         const inputSearch = shadow.querySelector('input')
 
         async function requests(com, chemin){
-            if (com == 'get'){
+            /*
+            Commande l'envoie de requêtes au serveur
+            */
+
+            if (com == 'get'){  // Récupère les fichiers présents sur le bureau
                 const res = await fetch('http://localhost:3000/bureau')
                 return await res.json()
             }
-            else if (com == 'exec'){
+            else if (com == 'exec'){    // Exécute ou ouvre le fichier / dossier ciblé selon sa nature
                 try {
                     await fetch(`http://localhost:3000/exec`, {
                         method: 'POST',
@@ -146,41 +158,45 @@ class AppMenu extends HTMLElement {
         }
 
         function resultGrid(res){
-            container.innerHTML = ''
+            /*
+            Affiche le contenu de 'res' sous forme de liste de fichiers / dossiers avec leur icône correspondant 
+            */
+
+            container.innerHTML = ''    // Vide le conteneur
 
             res.forEach(item => {
-                const nom = item.nom.split('.')
+                const nom = item.nom.split('.') // Sépare le nom du fichier de son extension
                 const ligne = document.createElement('div')
                 ligne.className = 'result'
 
-                const srcIcon = `http://localhost:3000/icone?file=${encodeURIComponent(item.chemin)}`
+                const srcIcon = `http://localhost:3000/icone?file=${encodeURIComponent(item.chemin)}`   // Récupère le chemin vers l'icône du fichier
 
-                ligne.innerHTML = `
+                ligne.innerHTML = ` 
                     <img src="${srcIcon}">
                     <p>${nom[0]} | ${item.chemin}</p>
                     <p style="visibility: collapse;">${nom[1]}</p>
-                `
+                `   // Crée la ligne du conteneur
                 
-                ligne.addEventListener('dblclick', () => {
+                ligne.addEventListener('dblclick', () => {  // Exécute l'application lors d'un double clic
                     requests('exec', item.chemin)
                 })
 
-                container.appendChild(ligne)
+                container.appendChild(ligne) // Ajoute la ligne au conteneur
             })
         }
 
-        const raccourcis = await requests('get')
+        const raccourcis = await requests('get')    // Récupère les fichiers / dossiers du bureau
         resultGrid(raccourcis)
 
         var searchTimer = null
         var network = null
         const searchContainer = inputSearch.parentNode
 
-        inputSearch.addEventListener('input', (e) => {
-            const val = e.target.value.trim()
-            if (searchTimer) clearTimeout(searchTimer)
+        inputSearch.addEventListener('input', (e) => {  // Gère la section recherche de fichier / dossier
+            const val = e.target.value.trim()   // Récupère la saisie
+            if (searchTimer) clearTimeout(searchTimer)  // Repousse le délais de saisie avant recherche
             if (network) network.abort()
-            if (!val) {
+            if (!val) { // Affiche le contenu du bureau s'il n'y a pas de recherche
                 searchContainer.classList.remove('searching')
                 requests('get').then(data => resultGrid(data))
                 return
@@ -188,16 +204,16 @@ class AppMenu extends HTMLElement {
 
             searchContainer.classList.add('searching')
 
-            searchTimer = setTimeout(async () => {
+            searchTimer = setTimeout(async () => {  // Effectue la recherche une fois le délais de saisie atteint
                 network = new AbortController()
                 const signal = network.signal
 
                 try {
-                    const url = `http://localhost:3000/bureau?search=${encodeURIComponent(val)}`
+                    const url = `http://localhost:3000/bureau?search=${encodeURIComponent(val)}`    // Recherche tous les fichiers / dossiers qui contiennent le texte saisi
                     const res = await fetch(url, {signal})
                     const data = await res.json()
 
-                    resultGrid(data)
+                    resultGrid(data)    // Affiche le résultat, vide s'il n'y a aucune correspondance
                 } catch (err) {
                     if (err.name !== 'AbortError') {
                         console.error("Erreur : ", err)
@@ -212,28 +228,28 @@ class AppMenu extends HTMLElement {
         var startY
         var scrollTop
 
-        container.addEventListener('mousedown', (e) => {
-            isDown = true
-            container.style.cursor = 'grabbing'
-            startY = e.pageY - container.offsetTop
-            scrollTop = container.scrollTop
-        })
-
-        container.addEventListener('mousemove', (e) => {
-            if (!isDown) return;
-            e.preventDefault();
-            const y = e.pageY - container.offsetTop;
-            const walk = (y - startY) * 1.5;
-            container.scrollTop = scrollTop - walk;
-        });
-
-        const stopDragging = () => {
-            isDown = false
-            container.style.cursor = 'default'
-        }
-
-        container.addEventListener('mouseup', stopDragging);
-        container.addEventListener('mouseleave', stopDragging);
+        container.addEventListener('mousedown', (e) => {        //
+            isDown = true                                       //
+            container.style.cursor = 'grabbing'                 //
+            startY = e.pageY - container.offsetTop              //
+            scrollTop = container.scrollTop                     //
+        })                                                      //
+                                                                //
+        container.addEventListener('mousemove', (e) => {        //
+            if (!isDown) return;                                //
+            e.preventDefault();                                 //
+            const y = e.pageY - container.offsetTop;            // Permet le scrolling
+            const walk = (y - startY) * 1.5;                    // manuel du conteneur
+            container.scrollTop = scrollTop - walk;             //
+        });                                                     //
+                                                                //
+        const stopDragging = () => {                            //
+            isDown = false                                      //
+            container.style.cursor = 'default'                  //
+        }                                                       //
+                                                                //
+        container.addEventListener('mouseup', stopDragging);    //
+        container.addEventListener('mouseleave', stopDragging); //
     }
 }
 

@@ -16,6 +16,8 @@ img {
     z-index: 0;
 }
 
+/* -- Modules -- */
+
 notes-module, calendar-module, appmenu-module {
     position: absolute;
     z-index: 1;

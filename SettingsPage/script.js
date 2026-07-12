@@ -1,4 +1,8 @@
 async function init() {
+    /*
+    Permet l'usage de fonction asynchrones bloquantes
+    */
+
     const body = document.querySelector('body')
     const img = document.querySelector('img')
 
@@ -10,30 +14,37 @@ async function init() {
     const container = document.querySelector('.container')
 
     async function fetchBackground() {
+        /*
+        Renvoie les informations du fond d'écran, tout en laissant à l'ordinateur le temps de s'allumer
+        */
+
         for (let i = 0; i < 10; i++) {
             try {
-                const res = await fetch('http://localhost:3000/settings/background')
-                if (res.ok) return await res.json()
+                const res = await fetch('http://localhost:3000/settings/background')    // Demande au serveur de renvoyer les informations liées au fond d'écran
+                if (res.ok) return await res.json() // Parse la réponse en un tableau exploitable
             } catch (e) {
-                await new Promise(r => setTimeout(r, 1000))
+                await new Promise(r => setTimeout(r, 1000)) // Applique un délais avant de relancer une demande
             }
         }
-        return []
+        return []   // Si le serveur n'a pas réussi à s'allumer à temps
     }
 
     var background = await fetchBackground()
-    if (background.length == 0) await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
+    if (background.length == 0) await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})    // Enregistre le chemin du fond d'écran s'il n'existe pas
 
     async function rafraichirBG() {
-        try {
-            const bg = await fetch('http://localhost:3000/background/image')
+        /*
+        Vérifie le chemin du fond d'écran et l'importe, met à jour le chemin s'il est obsolète
+        */
 
-            if (bg.ok) {
-                const blob = await bg.blob()
+        try {
+            const bg = await fetch('http://localhost:3000/background/image')    // Récupère le fond d'écran
+
+            if (bg.ok) {    
+                const blob = await bg.blob()    // Récupère le chemin est contournant les restrictions js
                 img.src = URL.createObjectURL(blob)
-            } else if (bg.status === 404) {
-                console.log('Chemin obsolèthe')
-                await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
+            } else if (bg.status === 404) { // Si le chemin est obsolète
+                await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})    // Met à jour le chemin du fond d'écran
                 rafraichirBG()
             }
         } catch (e) {
@@ -41,7 +52,7 @@ async function init() {
         }
     }
 
-    await rafraichirBG()
+    await rafraichirBG()    // Initialise le fond d'écran
 
     if (bgBtn) {
         const fileInput = document.createElement('input')
@@ -50,9 +61,9 @@ async function init() {
         fileInput.style.display = 'none'
         document.body.appendChild(fileInput)
 
-        bgBtn.addEventListener('click', () => fileInput.click())
+        bgBtn.addEventListener('click', () => fileInput.click())    // Ouvre un explorateur de fichier pour charger le nouveau fond d'écran
 
-        fileInput.addEventListener('change', () => {
+        fileInput.addEventListener('change', () => {    // Récupère le nouveau fond d'écran et remplace l'ancien
             const file = fileInput.files[0]
             if (!file) return
 
@@ -62,7 +73,7 @@ async function init() {
             reader.onload = async (e) => {
                 const buffer = e.target.result
                 try {
-                    const response = await fetch('http://localhost:3000/settings/background/update', {
+                    const response = await fetch('http://localhost:3000/settings/background/update', {  // Met à jour le fond d'écran
                         method: 'POST',
                         headers: { 
                             'Content-Type': 'application/octet-stream',
@@ -72,7 +83,7 @@ async function init() {
                     })
                     
                     const result = await response.json()
-                    if (result.ok) {
+                    if (result.ok) {    // Recharge la page en cas de succès pour mettre à jour visuellement
                         window.location.reload()
                     } else {
                         alert("Erreur serveur : " + result.error)
@@ -101,7 +112,6 @@ async function init() {
 
     const liste = document.createElement('div')
     liste.className = 'liste'
-    liste.style.width = modulesBtn.offsetWidth - 2 + "px"
     liste.style.zIndex = 1
 
     const mods = [
@@ -115,12 +125,12 @@ async function init() {
         'Sombre'
     ]
 
-    const settingsModules = await fetch('http://localhost:3000/settingsModules').then(r => r.json())
-    const settingsThemes = await fetch('http://localhost:3000/settingsThemes').then(r => r.json())
+    const settingsModules = await fetch('http://localhost:3000/settingsModules').then(r => r.json())    // Récupère les informations des modules
+    const settingsThemes = await fetch('http://localhost:3000/settingsThemes').then(r => r.json())  // Récupère le thème global
 
     var present = []
 
-    mods.forEach(mod => {
+    mods.forEach(mod => {   // Vérifie que tous les modules sont présents dans la base de données
         var check = true
         for(let i = 0; i < settingsModules.length; i++){
             if (mod[0] == settingsModules[i].module) {
@@ -129,12 +139,12 @@ async function init() {
             }
         }
 
-        if (check) {
+        if (check) {    // Ajoute ceux qui ne le sont pas
             present.push(mod[0])
         }
     })
 
-    if (present.length != 0){
+    if (present.length != 0){   // Enregistre tous les modules non enregistrés
         present.forEach(async mod => {
             await fetch(`http://localhost:3000/settingsModules/insert`, {
                 method: 'POST',
@@ -151,7 +161,7 @@ async function init() {
         })
     }
 
-    if (settingsThemes.length == 0){
+    if (settingsThemes.length == 0){    // Ajoute un thème par défaut s'il n'y en a pas
         await fetch(`http://localhost:3000/settingsThemes/insert`, {
             method: 'POST',
             headers: {'Content-Type': 'application/json'},
@@ -161,13 +171,11 @@ async function init() {
         })
     }
 
-    function closeModules(){
-        body.querySelector('.liste').remove()
-        liste.innerHTML = ''
-        modOpen = false
-    }
-
     function displayModule(i) {
+        /*
+        Importe le module et l'affiche
+        */
+
         const modulePath = new URL(mods[i][1], window.location.href).href
 
         import(modulePath).then(() => {
@@ -183,6 +191,10 @@ async function init() {
     }
 
     function newDrag(e) {
+        /*
+        Initialise le déplacement du module ciblé
+        */
+
         const bloc = e.currentTarget
         const rect = bloc.getBoundingClientRect();
         const borderSize = 20;
@@ -190,14 +202,14 @@ async function init() {
         const isClickingResizeX = (e.clientX >= rect.right - borderSize);
         const isClickingResizeY = (e.clientY >= rect.bottom - borderSize);
 
-        if (isClickingResizeX && isClickingResizeY) {
+        if (isClickingResizeX && isClickingResizeY) {   // Si le coin inférieur droit est sélectionné
             resized = true;
             Top = bloc.offsetTop
             Left = bloc.offsetLeft
             try {
                 bloc.parentNode.style.cursor = "se-resize"
             } catch (e) {bloc.style.cursor = "se-resize"}
-        } else {
+        } else {    // Si le module est sélectionné
             try {
                 bloc.parentNode.style.cursor = 'move'
             } catch (e) {bloc.style.cursor = "move"}
@@ -208,16 +220,28 @@ async function init() {
         deltaY = e.clientY - selected.offsetTop;
     }
 
-    for (let i = 0; i < mods.length; i++){
+    for (let i = 0; i < mods.length; i++){  // Affiche tous les modules actifs
         if (settingsModules[i].actif === 'true' && (settingsModules[2].actif !== 'true' || settingsModules[i].module === 'Notes')) displayModule(i)
     }
 
-    modulesBtn.addEventListener('click', (e) => {
+    function closeModules(){
+        /*
+        Ferme la liste des modules
+        */
+
+        body.querySelector('.liste').remove()
+        liste.innerHTML = ''
+        modOpen = false
+    }
+
+    modulesBtn.addEventListener('click', (e) => {   // Ouvre la liste des modules
         if (!modOpen) {
             if (themOpen) closeThemes()
             if (placOpen) closePlacements()
 
-            for (let i = 0; i < mods.length; i++){
+            liste.style.width = modulesBtn.offsetWidth - 2 + "px"
+
+            for (let i = 0; i < mods.length; i++){  // Crée chaque module avec une case à cocher
                 const module = document.createElement('div')
                 module.className = 'module'
                 module.innerHTML = `
@@ -226,19 +250,19 @@ async function init() {
                 `
 
                 const input = module.querySelector('input')
-                input.addEventListener('change', async () => {
+                input.addEventListener('change', async () => {  // Enregistre l'état de la case pour définir l'état du module
                     e.preventDefault()
 
-                    if (input.checked && (settingsModules[2].actif !== 'true' || settingsModules[i].module === 'Notes')){
+                    if (input.checked && (settingsModules[2].actif !== 'true' || settingsModules[i].module === 'Notes')){   // État actif
                         displayModule(i)
-                    } else {
+                    } else {    // État inactif
                         const suppr = container.querySelectorAll(`.${mods[i][0]}`)
                         suppr.forEach(el => {
                             el.remove()
                         });
                     }
                     await saveToBDD('modules', module)
-                    window.location.reload()
+                    window.location.reload()    // Recharge la page pour récupérer les nouvelles données
                 })
 
                 liste.appendChild(module)
@@ -249,13 +273,17 @@ async function init() {
             liste.style.bottom = modulesBtn.offsetTop + 52 + "px"
             modOpen = true
         } else {
-            closeModules()
+            closeModules()  // Ferme la liste des modules
         }
     })
 
     var notes
 
     function closePlacements(){
+        /*
+        Désactive le mode d'édition
+        */
+        
         container.classList.remove('edition')
         try {
             notes.getModules().forEach(mod => {
@@ -266,8 +294,7 @@ async function init() {
         placOpen = false
     }
 
-    placesBtn.addEventListener('click', (e) => {
-        
+    placesBtn.addEventListener('click', (e) => {    // Active le mode d'édition
         if (!placOpen){
             if (modOpen) closeModules()
             if (themOpen) closeThemes()
@@ -275,42 +302,48 @@ async function init() {
             container.classList.add('edition')
 
             var modules = []
-            if (settingsModules[2].actif !== 'true'){
-                mods.forEach(mod => {
-                    const bloc = container.querySelector(mod[2])
-                    if (bloc && mod[0] != 'Notes') modules.push(bloc)
-                })
-            } else {
-                notes = body.querySelector(mods[2][2])
-                notes.enableEdition()
-                modules = notes.getModules()
-            }
-            
-
-            modules.forEach(bloc => {
-                bloc.classList.add('edition')
-                bloc.removeEventListener('mousedown', newDrag)
-                bloc.addEventListener('mousedown', newDrag)
-            })
+            if (settingsModules[2].actif !== 'true'){                   //
+                mods.forEach(mod => {                                   //
+                    const bloc = container.querySelector(mod[2])        //
+                    if (bloc && mod[0] != 'Notes') modules.push(bloc)   //
+                })                                                      //
+            } else {                                                    //
+                notes = body.querySelector(mods[2][2])                  //
+                notes.enableEdition()                                   //
+                modules = notes.getModules()                            // Rend les modules éditables
+            }                                                           //
+                                                                        //
+                                                                        //
+            modules.forEach(bloc => {                                   //
+                bloc.classList.add('edition')                           //
+                bloc.removeEventListener('mousedown', newDrag)          //
+                bloc.addEventListener('mousedown', newDrag)             //
+            })                                                          //
 
             placOpen = true
         } else {
-            closePlacements()
+            closePlacements()   // Désactive le mode d'édition
         }
     })
 
     function closeThemes(){
+        /*
+        Ferme la liste des thèmes
+        */
+
         body.querySelector('.liste').remove()
         liste.innerHTML = ''
         themOpen = false
     }
 
-    themesBtn.addEventListener('click', (e) => {
+    themesBtn.addEventListener('click', (e) => {    // Ouvre la liste des thèmes
         if (!themOpen) {
             if (modOpen) closeModules()
             if (placOpen) closePlacements()
 
-            for (let i = 0; i < themes.length; i++){
+            liste.style.width = modulesBtn.offsetWidth - 2 + "px"
+
+            for (let i = 0; i < themes.length; i++){    // Crée chaque module avec un bouton à choix unique
                 const theme = document.createElement('div')
                 theme.className = 'module'
                 theme.innerHTML = `
@@ -319,7 +352,7 @@ async function init() {
                 `
 
                 const input = theme.querySelector('input')
-                input.addEventListener('click', async (e) => {
+                input.addEventListener('click', async (e) => {  // Sauvegarde le nouveau thème et l'applique
                     if (input.checked) {
                         await saveToBDD('themes', themes[i])
                         window.location.reload()
@@ -334,17 +367,21 @@ async function init() {
             liste.style.bottom = themesBtn.offsetTop + 52 + "px"
             themOpen = true
         } else {
-            closeThemes()
+            closeThemes()   // Ferme la liste des thèmes
         }
     })
 
     async function saveToBDD(setting, target){
-        if (setting == 'modules') {
+        /*
+        Commande l'envoie de requêtes au serveur
+        */
+
+        if (setting == 'modules') { // Met à jour l'état des modules
             const nom = target.querySelector('h2').textContent
             const input = target.querySelector('input')
             var mod
 
-            settingsModules.forEach(item => {
+            settingsModules.forEach(item => {   // Cherche le module qui a été activé / désactivé
                 if (item.module == nom) {
                     mod = item
                     item.actif = input.checked + ''
@@ -363,10 +400,10 @@ async function init() {
                 })
             })
 
-        } else if (setting == 'placements') {
+        } else if (setting == 'placements') {   // Met à jour la position et la taille du module sélectionné
             var mod
 
-            settingsModules.forEach(item => {
+            settingsModules.forEach(item => {   // Cherche le module qui a été modifié
                 if (target.classList.contains(item.module)) {
                     mod = item
                 }
@@ -385,7 +422,7 @@ async function init() {
                     height: target.offsetHeight + "px"
                 })
             })
-        } else if (setting == 'themes') {
+        } else if (setting == 'themes') {   // Met à jour le thème global
             return fetch(`http://localhost:3000/settingsThemes/update`, {
                 method: 'PATCH',
                 headers: {'Content-Type': 'application/json'},
@@ -396,8 +433,8 @@ async function init() {
         }
     }
 
-    document.addEventListener('mousemove', (e) => {
-        if (selected != null && !resized) {
+    document.addEventListener('mousemove', (e) => { // Déplace le module sélectionné ou modifie sa taille
+        if (selected != null && !resized) { // Déplace le module
             let x = e.clientX - deltaX;
             let y = e.clientY - deltaY;
 
@@ -412,11 +449,11 @@ async function init() {
 
             container.classList.remove('snap-x', 'snap-y');
 
-            if (Math.abs(x - snapTargetX) < tolerance) {
+            if (Math.abs(x - snapTargetX) < tolerance) {    // Ancre de centrage horizontale
                 x = snapTargetX;
                 container.classList.add('snap-x');
             }
-            if (Math.abs(y - snapTargetY) < tolerance) {
+            if (Math.abs(y - snapTargetY) < tolerance) {    // Ancre de centrage verticale
                 y = snapTargetY;
                 container.classList.add('snap-y');
             }
@@ -425,7 +462,7 @@ async function init() {
             autresModules = container.querySelectorAll('appmenu-module, calendar-module');
             if (autresModules.length == 0) autresModules = container.querySelector(mods[2][2]).getModules()
             
-            autresModules.forEach(mod => {
+            autresModules.forEach(mod => {  // Calcule l'ancrage par rapport aux autres modules
                 if (mod === selected) return;
 
                 const modLeft = mod.offsetLeft;
@@ -452,7 +489,8 @@ async function init() {
             
             selected.style.top = y + "px";
             selected.style.left = x + "px";
-        } else if (selected != null && resized) {
+
+        } else if (selected != null && resized) {   // Modifie la taille du module
             let targetWidth = Math.max(Math.abs(Left - e.clientX), 10);
             let targetHeight = Math.max(Math.abs(Top - e.clientY), 10);
 
@@ -464,7 +502,7 @@ async function init() {
             autresModules = container.querySelectorAll('appmenu-module, calendar-module');
             if (autresModules.length == 0) autresModules = container.querySelector(mods[2][2]).getModules()
 
-            autresModules.forEach(mod => {
+            autresModules.forEach(mod => {  // Calcule l'ancrage par rapport aux autres modules
                 if (mod === selected) return;
 
                 const modLeft = mod.offsetLeft;
@@ -472,26 +510,14 @@ async function init() {
                 const modRight = modLeft + mod.offsetWidth;
                 const modBottom = modTop + mod.offsetHeight;
 
-                if (Math.abs(targetWidth - mod.offsetWidth) < tolerance) {
-                    targetWidth = mod.offsetWidth;
-                }
-                if (Math.abs(targetHeight - mod.offsetHeight) < tolerance) {
-                    targetHeight = mod.offsetHeight;
-                }
+                if (Math.abs(targetWidth - mod.offsetWidth) < tolerance) targetWidth = mod.offsetWidth;
+                if (Math.abs(targetHeight - mod.offsetHeight) < tolerance) targetHeight = mod.offsetHeight;
 
-                if (Math.abs(currentRight - modLeft) < tolerance) {
-                    targetWidth = modLeft - Left;
-                }
-                else if (Math.abs(currentRight - modRight) < tolerance) {
-                    targetWidth = modRight - Left;
-                }
+                if (Math.abs(currentRight - modLeft) < tolerance) targetWidth = modLeft - Left;
+                else if (Math.abs(currentRight - modRight) < tolerance) targetWidth = modRight - Left;
 
-                if (Math.abs(currentBottom - modTop) < tolerance) {
-                    targetHeight = modTop - Top;
-                }
-                else if (Math.abs(currentBottom - modBottom) < tolerance) {
-                    targetHeight = modBottom - Top;
-                }
+                if (Math.abs(currentBottom - modTop) < tolerance) targetHeight = modTop - Top;
+                else if (Math.abs(currentBottom - modBottom) < tolerance) targetHeight = modBottom - Top;
             });
 
             const maxWidth = container.offsetWidth - Left;
@@ -505,7 +531,7 @@ async function init() {
         }
     })
 
-    document.addEventListener('mouseup', async () => {
+    document.addEventListener('mouseup', async () => {  // Sauvegarde la position et la taille du module sélectionné
         if (selected != null) {
             try {
                 container.classList.remove('snap-x', 'snap-y')

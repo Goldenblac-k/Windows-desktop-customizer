@@ -3,15 +3,19 @@ class Notes extends HTMLElement {
         const shadow = this.attachShadow({mode: 'open'})
 
         async function fetchTheme() {
+            /*
+            Renvoie le thème global du shader, tout en laissant à l'ordinateur le temps de s'allumer
+            */
+
             for (let i = 0; i < 10; i++) {
                 try {
-                    const res = await fetch('http://localhost:3000/settingsThemes')
-                    if (res.ok) return await res.json()
+                    const res = await fetch('http://localhost:3000/settingsThemes') // Demande au serveur de renvoyer les informations liées au thème
+                    return await res.json() // Parse la réponse en un tableau exploitable
                 } catch (e) {
-                    await new Promise(r => setTimeout(r, 1000))
+                    await new Promise(r => setTimeout(r, 1000)) // Applique un délais avant de relancer une demande
                 }
             }
-            return []
+            return []   // Si le serveur n'a pas réussi à s'allumer à temps
         }
 
         const settingsThemes = await fetchTheme()
@@ -25,7 +29,7 @@ class Notes extends HTMLElement {
                     color: ${settingsThemes[0].theme === 'Clair' ? 'black' : 'white'};
                 }
 
-                :host {
+                :host { // Élément parent du shadow
                     width: 100%;
                     height: 100%;
                 }
@@ -34,6 +38,8 @@ class Notes extends HTMLElement {
                     width: 100%;
                     height: 100%;
                 }
+
+                /* -- Entrée pour la saisie d'informations -- */
 
                 .openNote {
                     display: flex;
@@ -84,6 +90,8 @@ class Notes extends HTMLElement {
                     visibility: hidden;
                 }
 
+                /* -- Post-it -- */
+
                 .modeleNote {
                     position: absolute;
                     display: flex;
@@ -102,7 +110,7 @@ class Notes extends HTMLElement {
                     user-select: auto;
                 }
 
-                /* -- MODULES -- */
+                /* -- Autres modules -- */
 
                 appmenu-module, calendar-module {
                     position: absolute;
@@ -125,6 +133,8 @@ class Notes extends HTMLElement {
                     height: 100%;
                     z-index: 4;
                 }
+
+                /* -- Entrée pour la saisie d'informations du calendrier -- */
 
                 .entry {
                     position: absolute;
@@ -176,11 +186,11 @@ class Notes extends HTMLElement {
             ['Notes', '../Notes/notes-module.js', 'notes-module']
         ]
 
-        for(let i = 0; i < settingsModules.length; i++){
+        for(let i = 0; i < settingsModules.length; i++){    // Vérifie les modules actifs
             if(settingsModules[i].actif === 'true' && settingsModules[i].module !== 'Notes') {
                 const modulePath = new URL(mods[i][1], window.location.href).href
 
-                import(modulePath).then(() => {
+                import(modulePath).then(() => { // Importe le module et insert la balise correspondante
                     const balise = document.createElement(mods[i][2])
                     balise.className = mods[i][0]
                     balise.style.top = settingsModules[i].top
@@ -193,11 +203,11 @@ class Notes extends HTMLElement {
             }
         }
 
-        this.getModules = () => {
+        this.getModules = () => {   // Renvoie les modules actifs dans Notes
             return shadow.querySelectorAll('calendar-module, appmenu-module')
         }
 
-        this.enableEdition = () => {
+        this.enableEdition = () => {    // Rend les modules actifs modifiables depuis la page de settings
             const modules = shadow.querySelectorAll('calendar-module, appmenu-module')
             modules.forEach(mod => {
                 const overlay = document.createElement('div')
@@ -212,7 +222,7 @@ class Notes extends HTMLElement {
             })
         }
 
-        this.disableEdition = () => {
+        this.disableEdition = () => {   // Désactive le mode d'édition des modules
             const modules = shadow.querySelectorAll('calendar-module, appmenu-module')
             modules.forEach(mod => {
                 mod.querySelector('.edition-overlay')?.remove()
@@ -224,7 +234,7 @@ class Notes extends HTMLElement {
 
         const notes = await fetch('http://localhost:3000/notes')
 
-        const newNote = document.createElement('div')
+        const newNote = document.createElement('div')   // Crée l'entrée de saisie pour une note
         newNote.className = 'openNote'
         newNote.innerHTML = `
             <div class="noteBloc">
@@ -247,7 +257,7 @@ class Notes extends HTMLElement {
         const descBox = newNote.getElementsByClassName('noteDesc')[0]
         descBox.textContent = ""
 
-        const changeNote = document.createElement('div')
+        const changeNote = document.createElement('div')    // Crée l'entrée de modification d'une note
         changeNote.className = 'openNote'
         changeNote.innerHTML = `
             <div class="noteBloc">
@@ -281,9 +291,13 @@ class Notes extends HTMLElement {
         var deltaX = 0
         var deltaY = 0
 
-        chargeNote()
+        chargeNote()    // Charge et affiche les notes enregistrées
 
         function newDrag(e) {
+            /*
+            Enregistre la note sélectionnée
+            */
+
             selectedNote = this.parentNode
             z_index++
             selectedNote.style.zIndex = z_index
@@ -292,18 +306,23 @@ class Notes extends HTMLElement {
         }
 
         function chargeNote(){
+            /*
+            Charge et affiche les notes enregistrées
+            */
+
             var maxi = 0
 
             notes.forEach(note => {
-                const modeleNote = document.createElement('div')
+                const modeleNote = document.createElement('div')    // Crée un post-it
                 modeleNote.className = "modeleNote"
                 modeleNote.innerHTML = `
                     <p class="idContainer"></p>
                     <h3 class="modeleNoteTitle"></h3>
                     <p class="modeleNoteDesc"></p>
                 `
+
                 modeleNote.style.zIndex = parseInt(note.zInd)
-                modeleNote.style.backgroundColor = `rgba(${note.r}, ${note.g}, ${note.b}, 0.5)`
+                modeleNote.style.backgroundColor = `rgba(${note.r}, ${note.g}, ${note.b}, 0.5)` // Redonne la couleur aléatoire associée
                 modeleNote.style.top = note.top
                 modeleNote.style.left = note.left
 
@@ -317,13 +336,13 @@ class Notes extends HTMLElement {
                 modeleDesc.textContent = note.desc
                 modeleID.textContent = note.id
 
-                modeleTitle.style.backgroundColor = `rgb(${note.r}, ${note.g}, ${note.b})`
+                modeleTitle.style.backgroundColor = `rgb(${note.r}, ${note.g}, ${note.b})`  // Redonne la couleur aléatoire associée
 
                 body.appendChild(modeleNote)
 
-                modeleTitle.addEventListener('mousedown', newDrag)
+                modeleTitle.addEventListener('mousedown', newDrag)  // Commence le drag lors d'un clic maintenu
 
-                modeleNote.addEventListener('dblclick', () => {
+                modeleNote.addEventListener('dblclick', () => { // Ouvre le détail de la note lors d'un double clic
                     selectedNote = null
                     openedNote = modeleNote
                     changeNoteTitle.value = openedNote.getElementsByClassName('modeleNoteTitle')[0].textContent
@@ -338,21 +357,28 @@ class Notes extends HTMLElement {
         }
 
         function saveNewNote(){
-            if (titleBox.value != ""){
-                const modeleNote = document.createElement('div')
-                modeleNote.className = "modeleNote"
-                var r = Math.floor(Math.random() * 256)
-                var g = Math.floor(Math.random() * 256)
-                var b = Math.floor(Math.random() * 256)
+            /*
+            Sauvegarde une nouvelle note
+            */
 
-                modeleNote.style.backgroundColor = "rgba("+r+", "+g+", "+b+", 0.5)"
+            if (titleBox.value != ""){  // Oblige la saisie du titre au minimum
+                const modeleNote = document.createElement('div')    // Crée le post-it
+                modeleNote.className = "modeleNote"
+
+                var r = Math.floor(Math.random() * 256)                             //
+                var g = Math.floor(Math.random() * 256)                             // Génère une couleur
+                var b = Math.floor(Math.random() * 256)                             // associée à la note
+                modeleNote.style.backgroundColor = "rgba("+r+", "+g+", "+b+", 0.5)" //
+
                 z_index++
                 modeleNote.style.zIndex = z_index
+                
                 modeleNote.innerHTML = `
                     <p class="idContainer"></p>
                     <h3 class="modeleNoteTitle"></h3>
                     <p class="modeleNoteDesc"></p>
                 `
+
                 const modeleTitle = modeleNote.getElementsByClassName('modeleNoteTitle')[0]
                 const modeleDesc = modeleNote.getElementsByClassName('modeleNoteDesc')[0]
                 const modeleID = modeleNote.querySelectorAll('p')[0]
@@ -364,14 +390,15 @@ class Notes extends HTMLElement {
                 
                 body.appendChild(modeleNote)
                 
-                modeleNote.style.top = body.offsetHeight/2 - modeleNote.offsetHeight/2 +"px"
-                modeleNote.style.left = body.offsetWidth/2 - modeleNote.offsetWidth/2 +"px"
-                saveToBDD('insert', modeleNote, r, g, b)
+                modeleNote.style.top = body.offsetHeight/2 - modeleNote.offsetHeight/2 +"px"    // Place initialement le
+                modeleNote.style.left = body.offsetWidth/2 - modeleNote.offsetWidth/2 +"px"     // post-it au centre
+
+                saveToBDD('insert', modeleNote, r, g, b)    // Enregistre la note
                 closeNewNote()
 
-                modeleTitle.addEventListener('mousedown', newDrag)
+                modeleTitle.addEventListener('mousedown', newDrag)  // Commence le drag lors d'un clic maintenu
 
-                modeleNote.addEventListener('dblclick', () => {
+                modeleNote.addEventListener('dblclick', () => { // Ouvre le détail de la note lors d'un double clic
                     selectedNote = null
                     openedNote = modeleNote
                     changeNoteTitle.value = openedNote.getElementsByClassName('modeleNoteTitle')[0].textContent
@@ -384,7 +411,11 @@ class Notes extends HTMLElement {
         }
 
         async function saveToBDD(com = "", note, r = 0, g = 0, b = 0){
-            if (com == 'insert'){
+            /*
+            Commande l'envoie de requêtes au serveur
+            */
+           
+            if (com == 'insert'){   // Enregistre une nouvelle note
                 const result = await fetch(`http://localhost:3000/notes`, {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
@@ -402,7 +433,7 @@ class Notes extends HTMLElement {
 
                 note.querySelectorAll('p')[0].textContent = result.id
             }
-            else if (com == 'update'){
+            else if (com == 'update'){  // Met à jour la note ciblée
                 await fetch(`http://localhost:3000/notes/${note.querySelectorAll("p")[0].textContent}`, {
                     method: 'PATCH',
                     headers: {'Content-Type': 'application/json'},
@@ -415,7 +446,7 @@ class Notes extends HTMLElement {
                     })
                 })
             }
-            else if (com == 'delete'){
+            else if (com == 'delete'){  // Supprime la note ciblée
                 await fetch(`http://localhost:3000/notes/${note.querySelectorAll("p")[0].textContent}`, {
                     method: 'DELETE'
                 })
@@ -423,13 +454,21 @@ class Notes extends HTMLElement {
         }
 
         function deleteNote(){
+            /*
+            Supprime la note ciblée lorsque l'entrée de modification est ouverte
+            */
+
             saveToBDD('delete', openedNote)
             openedNote.remove()
             closeChangeNote()
         }
 
         function saveChangeNote(){
-            if (changeNoteTitle.value != ""){
+            /*
+            Sauvegarde les modifications de la note ciblée
+            */
+
+            if (changeNoteTitle.value != ""){   // Oblige la saisie du titre au minimum
                 openedNote.getElementsByClassName('modeleNoteTitle')[0].textContent = changeNoteTitle.value
                 openedNote.getElementsByClassName('modeleNoteDesc')[0].textContent = changeNoteDesc.value
                 saveToBDD('update', openedNote)
@@ -438,6 +477,10 @@ class Notes extends HTMLElement {
         }
 
         function openNewNote(){
+            /*
+            Ouvre l'entrée de saisie pour une nouvelle note
+            */
+           
             shadow.host.style.zIndex = 9999
             newNote.style.zIndex = z_index+1
             body.appendChild(newNote)
@@ -446,6 +489,10 @@ class Notes extends HTMLElement {
         }
 
         function closeNewNote(){
+            /*
+            Ferme l'entrée de saisie pour une nouvelle note
+            */
+           
             shadow.host.style.zIndex = 0
             titleBox.value = ""
             descBox.value = ""
@@ -454,15 +501,19 @@ class Notes extends HTMLElement {
         }
 
         function closeChangeNote(){
+            /*
+            Ferme l'entrée de modification de la note ciblée
+            */
+
             shadow.host.style.zIndex = 0
             body.querySelector('.openNote').remove()
             openedNote = null
         }
 
-        document.addEventListener('keydown', (e) => {
-            if (this._disabled) return
+        document.addEventListener('keydown', (e) => {   // Gère les événements clavier
+            if (this._disabled) return  // Empêche l'interaction clavier depuis la page de settings
 
-            if (!e.shiftKey && e.key === 'Enter'){
+            if (!e.shiftKey && e.key === 'Enter'){  // Ouvre une nouvelle note ou sauvegarde / modifie une existante
                 e.preventDefault()
                 if (newOpened){
                     saveNewNote()
@@ -473,7 +524,7 @@ class Notes extends HTMLElement {
                 }
             }
 
-            if (e.key === 'Escape'){
+            if (e.key === 'Escape'){    // Ferme toute pop-up de saisie ouverte
                 if (newOpened){
                     closeNewNote()
                 } else if (openedNote) {
@@ -482,27 +533,27 @@ class Notes extends HTMLElement {
 
             }
 
-            if (e.key === 'Delete' && openedNote && !window.isOpen){
+            if (e.key === 'Delete' && openedNote && !window.isOpen){    // Supprime la note ciblée lorsque l'entrée de modification est ouverte
                 deleteNote()
             }
         })
 
-        document.addEventListener('mousemove', (e) => {
+        document.addEventListener('mousemove', (e) => { // Gère le déplacement des post-it
             if (selectedNote != null) {
                 dragged = true
 
                 var x = e.clientX - deltaX;
                 var y = e.clientY - deltaY;
 
-                x = Math.max(0, Math.min(x, body.offsetWidth - selectedNote.offsetWidth))
-                y = Math.max(0, Math.min(y, body.offsetHeight - selectedNote.children[1].offsetHeight - 50))
+                x = Math.max(0, Math.min(x, body.offsetWidth - selectedNote.offsetWidth))                       // Empêche le dépassement de l'écran
+                y = Math.max(0, Math.min(y, body.offsetHeight - selectedNote.children[1].offsetHeight - 50))    // (et de la barre de tâche)
                 
                 selectedNote.style.top = y+"px"
                 selectedNote.style.left = x+"px"
             }
         })
 
-        document.addEventListener('mouseup', () => {
+        document.addEventListener('mouseup', () => {    // Enregistre le déplacement de la note ciblée
             if (selectedNote != null && dragged) {
                 saveToBDD('update', selectedNote)
                 selectedNote = null

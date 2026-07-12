@@ -18,6 +18,8 @@ img {
     pointer-events: none;
 }
 
+/* -- Barre de configuration -- */
+
 .settingBar {
     display: flex;
     position: absolute;
@@ -27,7 +29,6 @@ img {
     background-color: rgba(255, 255, 255, 0.22);
     justify-content: center;
     z-index: 5;
-    
 }
 
 .settingBar > div {
@@ -75,6 +76,8 @@ img {
     z-index: 1;
 }
 
+/* -- Modules -- */
+
 appmenu-module, calendar-module {
     display: block;
     position: absolute;
@@ -99,6 +102,8 @@ appmenu-module, calendar-module {
     height: 100%;
     z-index: 4;
 }
+
+/* -- Grille de placement -- */
 
 .container::before, .container::after {
     content: '';

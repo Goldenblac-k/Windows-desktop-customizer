@@ -11,7 +11,7 @@
         (function() {
             let lastKeyTime = 0;
 
-            window.addEventListener('keydown', function(e) {
+            window.addEventListener('keydown', function(e) {    // Empêche la saisie d'une touche d'être doublée par Lively
                 const now = performance.now();
                 if (now - lastKeyTime < 25) {
                     e.preventDefault();
@@ -21,7 +21,7 @@
                 lastKeyTime = now;
             }, true);
 
-            window.addEventListener('input', function(e) {
+            window.addEventListener('input', function(e) {  // Empêche la saisie d'une touche d'être doublée dans les entrées de saisie
                 const now = performance.now();
                 const element = e.composedPath()[0];
                 

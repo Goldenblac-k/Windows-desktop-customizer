@@ -1,22 +1,32 @@
 async function init() {
+    /*
+    Permet l'usage de fonction asynchrones bloquantes
+    */
+
     const body = document.querySelector('body')
 
     async function fetchTheme() {
+        /*
+        Renvoie le thème global du shader, tout en laissant à l'ordinateur le temps de s'allumer
+        */
+
         for (let i = 0; i < 10; i++) {
             try {
-                const res = await fetch('http://localhost:3000/settingsThemes')
-                if (res.ok) return await res.json()
+                const res = await fetch('http://localhost:3000/settingsThemes') // Demande au serveur de renvoyer les informations liées au thème
+                return await res.json() // Parse la réponse en un tableau exploitable
             } catch (e) {
-                await new Promise(r => setTimeout(r, 1000))
+                await new Promise(r => setTimeout(r, 1000)) // Applique un délais avant de relancer une demande
             }
         }
-        return []
+        return []   // Si le serveur n'a pas réussi à s'allumer à temps
     }
 
     const settingsThemes = await fetchTheme()
 
     const style = document.createElement('style')
     style.innerHTML += `
+        /* -- Entrée de saisie du calendrier -- */
+
         .entry {
             position: absolute;
             top: 0;
@@ -58,7 +68,7 @@ async function init() {
     `
 
     const settingsModules = await fetch('http://localhost:3000/settingsModules').then(r => r.json())
-    if (settingsModules[2].actif !== 'true') body.appendChild(style)
+    if (settingsModules[2].actif !== 'true') body.appendChild(style)    // Injecte les modules directement dans Notes s'il est actif
 
     const mods = [
         ['AppMenu', '../AppMenu/appMenu-module.js', 'appmenu-module'],
@@ -66,7 +76,7 @@ async function init() {
         ['Notes', '../Notes/notes-module.js', 'notes-module']
     ]
 
-    for(let i = 0; i < settingsModules.length; i++){
+    for(let i = 0; i < settingsModules.length; i++){    // Affiche tous les modules actifs
         if(settingsModules[i].actif === 'true' && (settingsModules[2].actif !== 'true' || settingsModules[i].module === 'Notes')) {
             const balise = document.createElement(mods[i][2])
             balise.className = mods[i][0]
@@ -83,23 +93,25 @@ async function init() {
     }
     
     const background = await fetch('http://localhost:3000/settings/background').then(r => r.json())
-    if (background.length == 0) await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})
+    if (background.length == 0) await fetch('http://localhost:3000/settings/background/insert', {method:'POST'})    // Vérifie le bon chemin du fond d'écran
 
     const img = document.querySelector('img')
     
     async function rafraichirBG() {
+        /*
+        Vérifie le chemin du fond d'écran et l'importe, met à jour le chemin s'il est obsolète
+        */
+
         try {
-            const bg = await fetch('http://localhost:3000/background/image')
+            const bg = await fetch('http://localhost:3000/background/image')    // Récupère le fond d'écran
 
-            if (bg.ok) {
-                const blob = await bg.blob()
+            if (bg.ok) {    // S'il n'y a eu aucun problème
+                const blob = await bg.blob()    // Récupère le chemin est contournant les restrictions js
                 img.src = URL.createObjectURL(blob)
-            } else if (bg.status === 404) {
-                await fetch('http://localhost:3000/settings/background/insert', { method: 'POST' })
-
-                await fetch('http://localhost:3000/settings/background/insert', { method: 'POST' })
+            } else if (bg.status === 404) { // Si le chemin est obsolète
+                await fetch('http://localhost:3000/settings/background/insert', { method: 'POST' }) // Met à jour le chemin du fond d'écran
                     
-                const retryBg = await fetch('http://localhost:3000/background/image')
+                const retryBg = await fetch('http://localhost:3000/background/image')   // Réessaye
                 if (retryBg.ok) {
                     const blob = await retryBg.blob()
                     img.src = URL.createObjectURL(blob)
@@ -112,8 +124,8 @@ async function init() {
 
     rafraichirBG()
 
-    window.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && (e.key === 'R' || e.key === 'r')) {
+    window.addEventListener('keydown', (e) => { // Gère les événements clavier
+        if (e.ctrlKey && (e.key === 'R' || e.key === 'r')) {    // Recharge la page
             e.preventDefault()
             e.stopImmediatePropagation()
             window.location.reload(true)
