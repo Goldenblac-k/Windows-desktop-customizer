@@ -21,6 +21,7 @@ Points à connaitre pour utiliser le shader :
   - le menu d'applications du bureau permet de rechercher aussi bien des fichiers que des dossiers.
   - la recherche se limite aux chemins : `C:/User/Nom/AppData/`, `D:/`, `E:/` et `F:/`.
   - double cliquer sur une ligne du menu permet d'exécuter l'application / le logiciel ou d'ouvrir le fichier / dossier.
+  - il est possible de redimensioner les modules en maintenant le clic au coin inférieur droit.
   - lorsque le shader a le focus, il est possible de rafraichir le shader en appuyant sur `ctrl`+`R`.
 
 Le projet peut être utilisé dans un navigateur classique mais nécessite la mise en place d'un serveur Node et engendre des rechargements automatiques lorsque la base de données se met à jour.
