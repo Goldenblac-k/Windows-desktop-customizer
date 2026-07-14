@@ -18,7 +18,7 @@ async function init() {
         Renvoie les informations du fond d'écran, tout en laissant à l'ordinateur le temps de s'allumer
         */
 
-        for (let i = 0; i < 10; i++) {
+        for (let i = 0; i < 30; i++) {
             try {
                 const res = await fetch('http://localhost:3000/settings/background')    // Demande au serveur de renvoyer les informations liées au fond d'écran
                 if (res.ok) return await res.json() // Parse la réponse en un tableau exploitable

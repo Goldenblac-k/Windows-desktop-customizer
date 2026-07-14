@@ -7,7 +7,7 @@ class AppMenu extends HTMLElement {
             Renvoie le thème global du shader, tout en laissant à l'ordinateur le temps de s'allumer
             */
 
-            for (let i = 0; i < 10; i++) {
+            for (let i = 0; i < 30; i++) {
                 try {
                     const res = await fetch('http://localhost:3000/settingsThemes') // Demande au serveur de renvoyer les informations liées au thème
                     return await res.json() // Parse la réponse en un tableau exploitable
