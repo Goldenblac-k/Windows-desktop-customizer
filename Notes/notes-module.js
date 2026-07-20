@@ -232,7 +232,7 @@ class Notes extends HTMLElement {
         const body = shadow.children[1]
         const calendar = shadow.children[2]
 
-        const notes = await fetch('http://localhost:3000/notes')
+        const notes = await fetch('http://localhost:3000/notes').then(r => r.json())
 
         const newNote = document.createElement('div')   // Crée l'entrée de saisie pour une note
         newNote.className = 'openNote'
@@ -515,6 +515,7 @@ class Notes extends HTMLElement {
 
             if (!e.shiftKey && e.key === 'Enter'){  // Ouvre une nouvelle note ou sauvegarde / modifie une existante
                 e.preventDefault()
+                console.log('ok')
                 if (newOpened){
                     saveNewNote()
                 } else if (openedNote != null) {
