@@ -1,27 +1,54 @@
-Ce projet a été développé en partant du principe qu'il sera un shader de Lively Wallpaper.
+# Window desktop customizer
 
-Pour éviter les problèmes de focus, je vous conseille d'aller dans :
-`paramètres > Fond d'écran > Périphérique d'interaction : Clavier`. Cela aura aussi pour conséquence de ne plus afficher les icones de bureau, un module existe justement pour y avoir accès via une liste.
+> Un fond d'écran interactif et dynamique conçu spécifiquement comme **shader pour Lively Wallpaper**, intégrant des modules d'agenda, de raccourcis bureau et de post-it.
 
-Vous pouvez aussi activer `Interaction de la souris lorsqu'une autre application est au premier plan` de ce même endroit afin de continuer à interagir avec lorsqu'une autre fenêtre est devant.
+## Configuration recommandée dans Lively Wallpaper
 
-⚠️ Il est nécessaire d'avoir installé Node.js au préalable.
+Afin d'éviter tout conflit ou problème de focus lors de l'utilisation du shader, il est fortement conseillé d'ajuster les paramètres suivants dans Lively Wallpaper :
 
-Pour mettre en place le shader, il vous suffit de double cliquer sur `setup.vbs` qui s'occupera d'installer les fichiers nécessaires et de placer un raccourcis de `open-settings.vbs` sur le bureau.
+1. Rendez-vous dans : **`Paramètres` → `Fond d'écran` → `Périphérique d'interaction`** et sélectionnez **`Clavier`**.
+   * *Note : Cette option masque les icônes de bureau natives de Windows. Un module dédié est intégré au shader pour naviguer dans vos applications sous forme de liste.*
+2. Activez également l'option **`Interaction de la souris lorsqu'une autre application est au premier plan`** au même endroit afin de pouvoir continuer à interagir avec le shader même si une fenêtre est ouverte par-dessus.
 
-Ensuite il ne vous reste plus qu'à ajouter le shader sur Lively Wallpaper. Depuis le menu principal, appuyez sur le `+` en haut, appuyez sur `Sélectionner un fichier`, parcourez vos fichier pour atteindre le dossier du projet puis sélectionnez `index.html`, confirmez ensuite les deux dernières pages et vous aurez fini.
+## Prérequis
 
-Le shader s'appliquera automatiquement et vous n'aurait plus qu'à l'utiliser. L'application du shader est plus long la première fois puisqu'il initialise la base de données et récupère le chemin vers le dossier du shader.
+⚠️ **Node.js** doit être obligatoirement installé sur votre système au préalable.
 
-Points à connaitre pour utiliser le shader :
-  - ⚠️ le scroll n'étant pas possible sur Lively Wallpaper, vous pouvez maintenir le clique sur les éléments qui peuvent scroll et bouger la souris pour monter ou descendre l'élément.
-  - le raccourcis open-settings vous envoie directement sur la page web de configuration.
-  - appuyez sur `Entrer` lorsque le shader a le focus pour créer un nouveau post-it.
-  - les touches `Entrer`, `Echap` et `Suppr` fonctionnent pour les modules et actions qui les utiliseraient logiquement.
-  - le menu d'applications du bureau permet de rechercher aussi bien des fichiers que des dossiers.
-  - la recherche se limite aux chemins : `C:/User/Nom/AppData/`, `D:/`, `E:/` et `F:/`.
-  - double cliquer sur une ligne du menu permet d'exécuter l'application / le logiciel ou d'ouvrir le fichier / dossier.
-  - il est possible de redimensioner les modules en maintenant le clic au coin inférieur droit.
-  - lorsque le shader a le focus, il est possible de rafraichir le shader en appuyant sur `ctrl`+`R`.
+## Installation et configuration
 
-Le projet peut être utilisé dans un navigateur classique mais nécessite la mise en place d'un serveur Node et engendre des rechargements automatiques lorsque la base de données se met à jour.
+### 1. Initialisation
+Double-cliquez sur le fichier **`setup.vbs`**.  
+Ce script s'occupe automatiquement :
+* D'installer l'ensemble des fichiers et dépendances nécessaires.
+* De créer un raccourci de **`open-settings.vbs`** directement sur votre bureau.
+
+### 2. Ajout dans Lively Wallpaper
+1. Ouvrez **Lively Wallpaper** sur le menu principal.
+2. Cliquez sur le bouton **`+`** situé en haut de la fenêtre.
+3. Cliquez sur **`Sélectionner un fichier`**.
+4. Parcourez vos dossiers jusqu'au répertoire du projet et sélectionnez le fichier **`index.html`**.
+5. Validez les deux dernières pages de confirmation.
+
+> **Remarque :** Le premier lancement du shader peut prendre un peu plus de temps que d'habitude. Il procède à l'initialisation de la base de données et à la récupération du chemin d'accès au dossier du shader. Une fois cette étape franchie, l'application s'effectue automatiquement.
+
+## Guide d'utilisation et fonctionnalités
+
+Voici les points clés à connaître pour exploiter pleinement le shader :
+
+* **Navigation et défilement** : Le défilement à la molette (*scroll*) n'étant pas pris en charge par Lively Wallpaper, maintenez le **clic gauche enfoncé** sur un élément déroulant et déplacez la souris vers le haut ou le bas pour naviguer.
+* **Configuration** : Le raccourci `open-settings` créé sur le bureau vous redirige directement vers la page web de configuration.
+* **Gestion des post-its** : Appuyez sur la touche <kbd>Entrée</kbd> lorsque le shader a le focus pour générer instantanément un nouveau post-it.
+* **Raccourcis clavier** :
+  * Les touches <kbd>Entrée</kbd>, <kbd>Échap</kbd> et <kbd>Suppr</kbd> sont gérées nativement par les modules et actions associées.
+  * Pressez <kbd>Ctrl</kbd> + <kbd>R</kbd> lorsque le shader a le focus pour rafraîchir l'interface.
+* **Lancement d'applications et fichiers** :
+  * Le menu d'applications permet de rechercher simultanément des fichiers et des dossiers.
+  * La recherche est restreinte aux répertoires suivants : `C:/User/Nom/AppData/`, `D:/`, `E:/` et `F:/`.
+  * Effectuez un **double-clic** sur une ligne pour lancer l'application/logiciel ou ouvrir le fichier/dossier sélectionné.
+* **Personnalisation de la disposition** : Depuis le site de configuration, redimensionnez les modules à tout moment en maintenant le clic sur leur **coin inférieur droit**.
+
+## Utilisation hors Lively Wallpaper (navigateur classique)
+
+Il est possible d'exécuter ce projet directement dans un navigateur web standard. Cependant, cette utilisation nécessite :
+1. La mise en place et le lancement d'un **serveur Node.js**.
+2. De prendre en compte que des **rechargements automatiques de page** surviendront à chaque mise à jour de la base de données.
