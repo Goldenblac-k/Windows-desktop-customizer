@@ -425,9 +425,12 @@ class Calendar extends HTMLElement {
         const view = await fetch('http://localhost:3000/view').then(r => r.json())  // Récupère le dernier mode d'affichage (pour la visualisation sur navigateur)
 
         var currentDate = new Date()
-        setInterval(() => {
-            currentDate = new Date()
-        }, 5000);
+        setInterval(() => {    // Met à jour la position du jour actuel
+            if (currentDate.getDay() != (new Date()).getDay()) {
+                currentDate = new Date()
+                selectView()
+            }
+        }, 5000)
         
         var currentView = view.length > 0 ? view[0].currentView : 'month'
 
