@@ -49,6 +49,7 @@ Voici les points clés à connaître pour exploiter pleinement le shader :
 
 ## Utilisation hors Lively Wallpaper (navigateur classique)
 
-Il est possible d'exécuter ce projet directement dans un navigateur web standard. Cependant, cette utilisation nécessite :
+Il est possible d'exécuter ce projet directement dans un navigateur web standard.
+Cependant, cette utilisation nécessite :
 1. La mise en place et le lancement d'un **serveur Node.js**.
 2. De prendre en compte que des **rechargements automatiques de page** surviendront à chaque mise à jour de la base de données.
